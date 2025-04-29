@@ -112,9 +112,107 @@ def find_transfer_lines(station_name, current_line_id):
     """
     return fetch_data(query_combined, (station_name, current_line_id))
 
+class SubwayMapMixin:
+    def create_map_tab(self):
+        tab = ttk.Frame(self.notebook)
+        self.notebook.add(tab, text="线路地图")
+
+        # 创建 Canvas，用于绘制地图和滚动
+        container = ttk.Frame(tab)
+        container.pack(fill=tk.BOTH, expand=True)
+        self.map_canvas = tk.Canvas(container, bg="#f0f0f0")
+        h_scroll = ttk.Scrollbar(container, orient=tk.HORIZONTAL, command=self.map_canvas.xview)
+        v_scroll = ttk.Scrollbar(container, orient=tk.VERTICAL,   command=self.map_canvas.yview)
+        self.map_canvas.configure(xscrollcommand=h_scroll.set, yscrollcommand=v_scroll.set)
+        self.map_canvas.grid(row=0, column=0, sticky='nsew')
+        v_scroll.grid(row=0, column=1, sticky='ns')
+        h_scroll.grid(row=1, column=0, sticky='ew')
+        container.rowconfigure(0, weight=1)
+        container.columnconfigure(0, weight=1)
+
+        # 调色板用于不同线路
+        palette = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+
+        # 动态加载线路和站点
+        lines = fetch_data("SELECT line_id, line_name FROM `line` WHERE status='运营' ORDER BY line_id")
+        self.map_objects = []
+        self.map_station_names = set()
+        y_base = 100
+        y_gap  = 100
+        for idx, line in enumerate(lines):
+            lid = line['line_id']
+            name = line['line_name']
+            color = palette[idx % len(palette)]
+            # 查询该线路所有站点，按 station_id 排序
+            stations = fetch_data(
+                "SELECT station_name FROM `station` WHERE line_id=%s ORDER BY station_id", (lid,)
+            )
+            count = len(stations)
+            if count == 0:
+                continue
+            # 计算 X 间距，留边距
+            margin = 50
+            width = (self.map_canvas.winfo_width() or 600)
+            x_gap = max(100, (width - 2*margin) / (count - 1))
+            y = y_base + idx * y_gap
+            coords = []
+            # 绘制线路连接线
+            for i, st in enumerate(stations):
+                x = margin + i * x_gap
+                coords.extend([x, y])
+            self.map_canvas.create_line(*coords, fill=color, width=6, capstyle=tk.ROUND, tags=(f'line_{lid}',))
+            # 绘制站点圆点与站名
+            for i, st in enumerate(stations):
+                station_name = st['station_name']
+                self.map_station_names.add(station_name)
+                x = margin + i * x_gap
+                self.map_canvas.create_oval(
+                    x-8, y-8, x+8, y+8,
+                    fill=color, outline='white', width=2,
+                    tags=('station_dot', station_name)
+                )
+                self.map_canvas.create_text(
+                    x, y-20, text=station_name,
+                    font=('Helvetica', 10, 'bold'), fill=color,
+                    tags=('station_text', station_name)
+                )
+        # 配置滚动区域
+        self.map_canvas.update_idletasks()
+        bbox = self.map_canvas.bbox(tk.ALL)
+        if bbox:
+            self.map_canvas.config(scrollregion=bbox)
+
+        # 绑定点击事件，仅对站点圆点
+        self.map_canvas.tag_bind('station_dot', '<Button-1>', self.on_map_station_click)
+
+    def on_map_station_click(self, event):
+        items = self.map_canvas.find_withtag(tk.CURRENT)
+        if not items:
+            return
+        tags = self.map_canvas.gettags(items[0])
+        # 从 tags 中提取真实站点名称
+        station_name = next((t for t in tags if t in self.map_station_names), None)
+        if station_name:
+            self.show_station_popup(station_name)
+
+    def show_station_popup(self, station_name):
+        # 弹窗展示站点详情及 POI
+        info = fetch_data(
+            "SELECT station_id, location_desc, is_transfer FROM station WHERE station_name=%s", (station_name,)
+        )
+        if not info:
+            messagebox.showerror("查询错误", f"未找到站点 '{station_name}'。")
+            return
+        st = info[0]
+        pois = fetch_data(
+            "SELECT poi_name, category FROM pointsofinterest WHERE station_id=%s", (st['station_id'],)
+        )
+        text = f"站点: {station_name}\n位置: {st['location_desc']}\n换乘站: {'是' if st['is_transfer'] else '否'}\n\n周边兴趣点:\n"
+        text += ''.join([f"• {p['poi_name']} ({p['category']})\n" for p in pois]) if pois else '无'
+        messagebox.showinfo(f"{station_name} 信息", text)
 
 # --- GUI Application Class ---
-class SubwayApp(tk.Tk):
+class SubwayApp(SubwayMapMixin, tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("地铁信息管理系统 (增强版)")
@@ -148,6 +246,7 @@ class SubwayApp(tk.Tk):
         self.create_maint_tab()
         self.create_alert_tab()
         self.create_turnstile_tab()
+        self.create_map_tab()
 
 
     # --- Tab 1: Lines, Stations & Surroundings (Enhanced) ---
