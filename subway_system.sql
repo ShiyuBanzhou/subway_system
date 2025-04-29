@@ -11,11 +11,29 @@
  Target Server Version : 80041 (8.0.41)
  File Encoding         : 65001
 
- Date: 29/04/2025 15:41:17
+ Date: 29/04/2025 16:08:22
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for farezone
+-- ----------------------------
+DROP TABLE IF EXISTS `farezone`;
+CREATE TABLE `farezone`  (
+  `zone_id` int NOT NULL AUTO_INCREMENT COMMENT '分区ID',
+  `zone_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '分区名称',
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述（覆盖范围、特殊提示）',
+  PRIMARY KEY (`zone_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '车费分区表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of farezone
+-- ----------------------------
+INSERT INTO `farezone` VALUES (1, '1区', '市中心及周边核心区域');
+INSERT INTO `farezone` VALUES (2, '2区', '次核心区域');
+INSERT INTO `farezone` VALUES (3, '3区', '远郊及延伸区域');
 
 -- ----------------------------
 -- Table structure for line
@@ -35,11 +53,36 @@ CREATE TABLE `line`  (
 -- ----------------------------
 -- Records of line
 -- ----------------------------
-INSERT INTO `line` VALUES (1, '1号线', NULL, NULL, '运营', '2010-05-01');
-INSERT INTO `line` VALUES (2, '2号线', NULL, NULL, '运营', '2012-10-01');
-INSERT INTO `line` VALUES (3, '亦庄线', NULL, NULL, '运营', '2010-12-30');
-INSERT INTO `line` VALUES (4, 'S1线', NULL, NULL, '停运', '2017-12-30');
-INSERT INTO `line` VALUES (5, '机场线', NULL, NULL, '运营', '2008-07-19');
+INSERT INTO `line` VALUES (1, '1号线', 1, 5, '运营', '2010-05-01');
+INSERT INTO `line` VALUES (2, '2号线', 6, 10, '运营', '2012-10-01');
+INSERT INTO `line` VALUES (3, '亦庄线', 11, 13, '运营', '2010-12-30');
+INSERT INTO `line` VALUES (4, 'S1线', 16, 20, '停运', '2017-12-30');
+INSERT INTO `line` VALUES (5, '机场线', 21, 24, '运营', '2008-07-19');
+
+-- ----------------------------
+-- Table structure for maintenancerecord
+-- ----------------------------
+DROP TABLE IF EXISTS `maintenancerecord`;
+CREATE TABLE `maintenancerecord`  (
+  `record_id` int NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `equipment` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '设备名称（闸机/自动售票机等）',
+  `station_id` int NOT NULL COMMENT '站点ID',
+  `staff_id` int NULL DEFAULT NULL COMMENT '维修员工ID（可为空，用于 ON DELETE SET NULL）',
+  `start_time` datetime NOT NULL COMMENT '开始时间',
+  `end_time` datetime NULL DEFAULT NULL COMMENT '结束时间',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '问题描述及处理结果',
+  PRIMARY KEY (`record_id`) USING BTREE,
+  INDEX `station_id`(`station_id` ASC) USING BTREE,
+  INDEX `staff_id`(`staff_id` ASC) USING BTREE,
+  CONSTRAINT `fk_maint_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `fk_maint_station` FOREIGN KEY (`station_id`) REFERENCES `station` (`station_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '站点设备维护记录' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of maintenancerecord
+-- ----------------------------
+INSERT INTO `maintenancerecord` VALUES (1, '闸机A1', 4, 3, '2025-04-28 10:00:00', '2025-04-28 12:00:00', '更换感应模块');
+INSERT INTO `maintenancerecord` VALUES (2, '售票机B2', 8, 3, '2025-04-28 13:30:00', NULL, '系统升级中');
 
 -- ----------------------------
 -- Table structure for passenger
@@ -52,7 +95,7 @@ CREATE TABLE `passenger`  (
   `registration_date` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册日期',
   PRIMARY KEY (`passenger_id`) USING BTREE,
   UNIQUE INDEX `uq_phone_number`(`phone_number` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '乘客信息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '乘客信息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of passenger
@@ -62,6 +105,9 @@ INSERT INTO `passenger` VALUES (2, '李四', '13900139001', '2025-04-29 14:28:48
 INSERT INTO `passenger` VALUES (3, '王五', '13700137002', '2025-04-29 14:28:48');
 INSERT INTO `passenger` VALUES (4, '赵六', '15800158003', '2025-04-29 14:28:48');
 INSERT INTO `passenger` VALUES (5, '孙七', '15900159004', '2025-04-29 14:28:48');
+INSERT INTO `passenger` VALUES (6, '周八', '13600136005', '2025-04-29 15:00:00');
+INSERT INTO `passenger` VALUES (7, '吴九', '13700137006', '2025-04-29 15:05:00');
+INSERT INTO `passenger` VALUES (8, '郑十', '13800138007', '2025-04-29 15:10:00');
 
 -- ----------------------------
 -- Table structure for pointsofinterest
@@ -76,7 +122,7 @@ CREATE TABLE `pointsofinterest`  (
   PRIMARY KEY (`poi_id`) USING BTREE,
   INDEX `idx_station_id`(`station_id` ASC) USING BTREE,
   CONSTRAINT `fk_poi_station` FOREIGN KEY (`station_id`) REFERENCES `station` (`station_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '站点周边兴趣点信息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '站点周边兴趣点信息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of pointsofinterest
@@ -95,6 +141,38 @@ INSERT INTO `pointsofinterest` VALUES (11, 10, '东方银座', '购物/办公', 
 INSERT INTO `pointsofinterest` VALUES (12, 10, '簋街', '餐饮', '著名的餐饮一条街，以麻辣小龙虾闻名');
 INSERT INTO `pointsofinterest` VALUES (13, 11, '首开福茂', '购物', '服务周边社区的购物中心');
 INSERT INTO `pointsofinterest` VALUES (14, 1, '苹果园交通枢纽商业配套', '交通/商业', '地铁、公交枢纽站旁的商业设施');
+INSERT INTO `pointsofinterest` VALUES (15, 16, '金安桥湿地公园', '景点', '湿地生态保护区，适合休闲漫步');
+INSERT INTO `pointsofinterest` VALUES (16, 22, '三元桥购物中心', '购物', '大型综合购物中心');
+INSERT INTO `pointsofinterest` VALUES (17, 25, '昌平区政府', '行政', '昌平区政府机构所在地');
+INSERT INTO `pointsofinterest` VALUES (18, 20, '北京科技大学南校区', '教育', '北京科技大学南校区所在地');
+
+-- ----------------------------
+-- Table structure for routesegment
+-- ----------------------------
+DROP TABLE IF EXISTS `routesegment`;
+CREATE TABLE `routesegment`  (
+  `segment_id` int NOT NULL AUTO_INCREMENT COMMENT '路段ID',
+  `line_id` int NOT NULL COMMENT '线路ID',
+  `from_station` int NOT NULL COMMENT '起点站ID',
+  `to_station` int NOT NULL COMMENT '终点站ID',
+  `distance_km` decimal(5, 2) NOT NULL COMMENT '距离（公里）',
+  PRIMARY KEY (`segment_id`) USING BTREE,
+  INDEX `fk_seg_line`(`line_id` ASC) USING BTREE,
+  INDEX `fk_seg_from_sta`(`from_station` ASC) USING BTREE,
+  INDEX `fk_seg_to_sta`(`to_station` ASC) USING BTREE,
+  CONSTRAINT `fk_seg_from_sta` FOREIGN KEY (`from_station`) REFERENCES `station` (`station_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_seg_line` FOREIGN KEY (`line_id`) REFERENCES `line` (`line_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_seg_to_sta` FOREIGN KEY (`to_station`) REFERENCES `station` (`station_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '线路相邻站点路段表，用于换乘及路径计算' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of routesegment
+-- ----------------------------
+INSERT INTO `routesegment` VALUES (1, 1, 1, 2, 2.50);
+INSERT INTO `routesegment` VALUES (2, 1, 2, 3, 1.80);
+INSERT INTO `routesegment` VALUES (3, 2, 6, 7, 2.20);
+INSERT INTO `routesegment` VALUES (4, 3, 11, 12, 3.00);
+INSERT INTO `routesegment` VALUES (5, 5, 10, 19, 4.50);
 
 -- ----------------------------
 -- Table structure for schedule
@@ -113,7 +191,7 @@ CREATE TABLE `schedule`  (
   INDEX `fk_schedule_station`(`station_id` ASC) USING BTREE,
   CONSTRAINT `fk_schedule_station` FOREIGN KEY (`station_id`) REFERENCES `station` (`station_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_schedule_train` FOREIGN KEY (`train_id`) REFERENCES `train` (`train_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '列车时刻表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '列车时刻表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of schedule
@@ -126,6 +204,111 @@ INSERT INTO `schedule` VALUES (5, 3, 7, '06:14:00', '06:15:00', '2025-04-29');
 INSERT INTO `schedule` VALUES (6, 5, 11, NULL, '06:20:00', '2025-04-29');
 INSERT INTO `schedule` VALUES (7, 5, 12, '06:23:00', '06:24:00', '2025-04-29');
 INSERT INTO `schedule` VALUES (8, 1, 4, '06:15:00', '06:16:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (9, 2, 1, '06:02:00', '06:03:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (10, 2, 2, '06:06:00', '06:07:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (11, 2, 3, '06:10:00', '06:11:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (12, 2, 4, '06:15:00', '06:16:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (13, 2, 5, '06:20:00', '06:21:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (14, 4, 6, '06:05:00', '06:06:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (15, 4, 7, '06:09:00', '06:10:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (16, 4, 8, '06:13:00', '06:14:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (17, 4, 9, '06:17:00', '06:18:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (18, 4, 10, '06:21:00', '06:22:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (19, 6, 11, '06:08:00', '06:09:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (20, 6, 12, '06:12:00', '06:13:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (21, 6, 13, '06:17:00', '06:18:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (22, 7, 14, '07:00:00', '07:01:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (23, 7, 15, '07:05:00', '07:06:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (24, 7, 16, '07:10:00', '07:11:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (25, 7, 17, '07:15:00', '07:16:00', '2025-04-29');
+INSERT INTO `schedule` VALUES (26, 7, 18, '07:20:00', '07:21:00', '2025-04-29');
+
+-- ----------------------------
+-- Table structure for scheduleexception
+-- ----------------------------
+DROP TABLE IF EXISTS `scheduleexception`;
+CREATE TABLE `scheduleexception`  (
+  `exception_id` int NOT NULL AUTO_INCREMENT COMMENT '例外ID',
+  `schedule_id` int NOT NULL COMMENT '时刻表ID',
+  `reason` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '例外原因（维修/事故/特殊活动）',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '备注',
+  PRIMARY KEY (`exception_id`) USING BTREE,
+  INDEX `fk_exc_schedule`(`schedule_id` ASC) USING BTREE,
+  CONSTRAINT `fk_exc_schedule` FOREIGN KEY (`schedule_id`) REFERENCES `schedule` (`schedule_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '时刻表变更或异常记录' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of scheduleexception
+-- ----------------------------
+INSERT INTO `scheduleexception` VALUES (1, 2, '维修', '车辆故障导致部分晚点');
+INSERT INTO `scheduleexception` VALUES (2, 8, '活动', '重大活动延时发车');
+
+-- ----------------------------
+-- Table structure for servicealert
+-- ----------------------------
+DROP TABLE IF EXISTS `servicealert`;
+CREATE TABLE `servicealert`  (
+  `alert_id` int NOT NULL AUTO_INCREMENT COMMENT '公告ID',
+  `line_id` int NULL DEFAULT NULL COMMENT '影响线路ID（NULL:全网）',
+  `station_id` int NULL DEFAULT NULL COMMENT '影响站点ID',
+  `start_time` datetime NOT NULL COMMENT '生效时间',
+  `end_time` datetime NULL DEFAULT NULL COMMENT '结束时间',
+  `message` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '公告内容',
+  PRIMARY KEY (`alert_id`) USING BTREE,
+  INDEX `fk_alert_line`(`line_id` ASC) USING BTREE,
+  INDEX `fk_alert_station`(`station_id` ASC) USING BTREE,
+  CONSTRAINT `fk_alert_line` FOREIGN KEY (`line_id`) REFERENCES `line` (`line_id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `fk_alert_station` FOREIGN KEY (`station_id`) REFERENCES `station` (`station_id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '临时服务中断或公告' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of servicealert
+-- ----------------------------
+INSERT INTO `servicealert` VALUES (1, 2, NULL, '2025-05-01 00:00:00', '2025-05-02 23:59:00', '2号线全线检修，部分车次停运');
+INSERT INTO `servicealert` VALUES (2, NULL, 4, '2025-04-30 09:00:00', '2025-04-30 12:00:00', '西单站A口临时关闭，改由B口进出');
+
+-- ----------------------------
+-- Table structure for staff
+-- ----------------------------
+DROP TABLE IF EXISTS `staff`;
+CREATE TABLE `staff`  (
+  `staff_id` int NOT NULL AUTO_INCREMENT COMMENT '员工ID',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '姓名',
+  `role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '岗位（管理员/检票/维修/客服等）',
+  `contact` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '联系方式',
+  PRIMARY KEY (`staff_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '地铁系统运营员工' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of staff
+-- ----------------------------
+INSERT INTO `staff` VALUES (1, '张运营', '管理员', '010-12345678');
+INSERT INTO `staff` VALUES (2, '李检票', '检票员', '010-23456789');
+INSERT INTO `staff` VALUES (3, '王维保', '维修员', '010-34567890');
+
+-- ----------------------------
+-- Table structure for staffassignment
+-- ----------------------------
+DROP TABLE IF EXISTS `staffassignment`;
+CREATE TABLE `staffassignment`  (
+  `assign_id` int NOT NULL AUTO_INCREMENT COMMENT '排班ID',
+  `staff_id` int NOT NULL COMMENT '员工ID',
+  `station_id` int NOT NULL COMMENT '站点ID',
+  `start_time` datetime NOT NULL COMMENT '班次开始',
+  `end_time` datetime NOT NULL COMMENT '班次结束',
+  PRIMARY KEY (`assign_id`) USING BTREE,
+  INDEX `staff_id`(`staff_id` ASC) USING BTREE,
+  INDEX `station_id`(`station_id` ASC) USING BTREE,
+  CONSTRAINT `fk_assign_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_assign_station` FOREIGN KEY (`station_id`) REFERENCES `station` (`station_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '员工站点排班表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of staffassignment
+-- ----------------------------
+INSERT INTO `staffassignment` VALUES (1, 1, 4, '2025-04-29 06:00:00', '2025-04-29 14:00:00');
+INSERT INTO `staffassignment` VALUES (2, 2, 8, '2025-04-29 06:00:00', '2025-04-29 14:00:00');
+INSERT INTO `staffassignment` VALUES (3, 3, 14, '2025-04-29 08:00:00', '2025-04-29 16:00:00');
 
 -- ----------------------------
 -- Table structure for station
@@ -141,7 +324,7 @@ CREATE TABLE `station`  (
   UNIQUE INDEX `uq_station_name_line`(`station_name` ASC, `line_id` ASC) USING BTREE COMMENT '同一线路下站点名唯一',
   INDEX `fk_station_line`(`line_id` ASC) USING BTREE,
   CONSTRAINT `fk_station_line` FOREIGN KEY (`line_id`) REFERENCES `line` (`line_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '地铁站点信息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '地铁站点信息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of station
@@ -161,6 +344,16 @@ INSERT INTO `station` VALUES (12, '肖村', 3, '丰台区成寿寺路', 0);
 INSERT INTO `station` VALUES (13, '小红门', 3, '朝阳区小红门路', 0);
 INSERT INTO `station` VALUES (14, '旧宫', 3, '大兴区旧宫镇', 0);
 INSERT INTO `station` VALUES (15, '亦庄桥', 3, '大兴区亦庄经济技术开发区', 0);
+INSERT INTO `station` VALUES (16, '金安桥', 4, '房山区金安桥镇', 0);
+INSERT INTO `station` VALUES (17, '良乡大学城北', 4, '房山区良乡大学城北侧', 0);
+INSERT INTO `station` VALUES (18, '良乡大学城', 4, '房山区良乡大学城', 0);
+INSERT INTO `station` VALUES (19, '良乡大学城西', 4, '房山区良乡大学城西侧', 0);
+INSERT INTO `station` VALUES (20, '良乡大学城南换乘', 4, '与燕房线换乘站点', 1);
+INSERT INTO `station` VALUES (21, '东直门', 5, '东城区东直门外斜街', 1);
+INSERT INTO `station` VALUES (22, '三元桥', 5, '朝阳区三元桥路', 0);
+INSERT INTO `station` VALUES (23, '机场二号航站楼', 5, '顺义区空港街道', 0);
+INSERT INTO `station` VALUES (24, '机场三号航站楼', 5, '顺义区', 0);
+INSERT INTO `station` VALUES (25, '霍营', 5, '昌平区霍营镇', 1);
 
 -- ----------------------------
 -- Table structure for ticket
@@ -182,7 +375,7 @@ CREATE TABLE `ticket`  (
   CONSTRAINT `fk_ticket_dep_station` FOREIGN KEY (`departure_station_id`) REFERENCES `station` (`station_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_ticket_passenger` FOREIGN KEY (`passenger_id`) REFERENCES `passenger` (`passenger_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `chk_price` CHECK (`price` > 0)
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '票务信息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '票务信息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of ticket
@@ -194,6 +387,27 @@ INSERT INTO `ticket` VALUES (4, 3, '2025-04-29 14:28:48', 1, 4, 5.00, '已支付
 INSERT INTO `ticket` VALUES (5, 4, '2025-04-29 14:28:48', 11, 15, 3.00, '已支付');
 INSERT INTO `ticket` VALUES (6, 5, '2025-04-29 14:28:48', 15, 11, 3.00, '未支付');
 INSERT INTO `ticket` VALUES (7, 1, '2025-04-29 14:48:06', 4, 5, 3.50, '已支付');
+INSERT INTO `ticket` VALUES (8, 6, '2025-04-29 15:20:00', 4, 6, 5.50, '已支付');
+INSERT INTO `ticket` VALUES (9, 7, '2025-04-29 15:25:00', 14, 18, 8.00, '未支付');
+
+-- ----------------------------
+-- Table structure for tickettype
+-- ----------------------------
+DROP TABLE IF EXISTS `tickettype`;
+CREATE TABLE `tickettype`  (
+  `type_id` int NOT NULL AUTO_INCREMENT COMMENT '票种ID',
+  `type_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '票种名称（单程票/日票/月票等）',
+  `base_price` decimal(8, 2) NOT NULL COMMENT '基础票价',
+  `validity_minutes` int NOT NULL COMMENT '有效期（分钟）',
+  PRIMARY KEY (`type_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '车票种类及价格规则' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of tickettype
+-- ----------------------------
+INSERT INTO `tickettype` VALUES (1, '单程票', 3.00, 90);
+INSERT INTO `tickettype` VALUES (2, '日票', 18.00, 1440);
+INSERT INTO `tickettype` VALUES (3, '月票', 160.00, 43200);
 
 -- ----------------------------
 -- Table structure for train
@@ -236,7 +450,7 @@ CREATE TABLE `trainstatuslog`  (
   `changed_by` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`log_id`) USING BTREE,
   INDEX `idx_train_id`(`train_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '列车状态变更日志' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '列车状态变更日志' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of trainstatuslog
@@ -245,6 +459,32 @@ INSERT INTO `trainstatuslog` VALUES (1, 4, '维修中', '运行中', '2025-04-29
 INSERT INTO `trainstatuslog` VALUES (2, 4, '运行中', '维修中', '2025-04-29 14:48:06', 'root@localhost');
 INSERT INTO `trainstatuslog` VALUES (3, 4, '维修中', '运行中', '2025-04-29 15:33:37', 'root@localhost');
 INSERT INTO `trainstatuslog` VALUES (4, 4, '运行中', '维修中', '2025-04-29 15:33:43', 'root@localhost');
+INSERT INTO `trainstatuslog` VALUES (5, 5, '运行中', '维修中', '2025-04-28 10:00:00', 'system');
+INSERT INTO `trainstatuslog` VALUES (6, 5, '维修中', '运行中', '2025-04-28 12:00:00', 'system');
+
+-- ----------------------------
+-- Table structure for turnstilelog
+-- ----------------------------
+DROP TABLE IF EXISTS `turnstilelog`;
+CREATE TABLE `turnstilelog`  (
+  `log_id` bigint NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+  `passenger_id` int NOT NULL COMMENT '乘客ID',
+  `station_id` int NOT NULL COMMENT '站点ID',
+  `action` enum('IN','OUT') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '进/出',
+  `timestamp` datetime NOT NULL COMMENT '操作时间',
+  `ticket_id` int NULL DEFAULT NULL COMMENT '关联票务ID（可选）',
+  PRIMARY KEY (`log_id`) USING BTREE,
+  INDEX `passenger_id`(`passenger_id` ASC) USING BTREE,
+  INDEX `station_id`(`station_id` ASC) USING BTREE,
+  INDEX `fk_turnstile_ticket`(`ticket_id` ASC) USING BTREE,
+  CONSTRAINT `fk_turnstile_passenger` FOREIGN KEY (`passenger_id`) REFERENCES `passenger` (`passenger_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_turnstile_station` FOREIGN KEY (`station_id`) REFERENCES `station` (`station_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_turnstile_ticket` FOREIGN KEY (`ticket_id`) REFERENCES `ticket` (`ticket_id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '闸机刷票进出记录' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of turnstilelog
+-- ----------------------------
 
 -- ----------------------------
 -- View structure for view_line_station_count

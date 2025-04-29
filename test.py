@@ -118,7 +118,7 @@ class SubwayApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("地铁信息管理系统 (增强版)")
-        self.geometry("950x700") # Increased window size
+        self.geometry("1080x720") # Increased window size
 
         # --- Style ---
         style = ttk.Style(self)
@@ -142,7 +142,13 @@ class SubwayApp(tk.Tk):
         self.create_line_station_tab()
         self.create_schedule_tab()
         self.create_ticket_tab()
-        self.create_train_admin_tab() # Admin features
+        self.create_train_admin_tab()
+        self.create_fare_tab()
+        self.create_staff_tab()
+        self.create_maint_tab()
+        self.create_alert_tab()
+        self.create_turnstile_tab()
+
 
     # --- Tab 1: Lines, Stations & Surroundings (Enhanced) ---
     def create_line_station_tab(self):
@@ -744,6 +750,111 @@ class SubwayApp(tk.Tk):
                  # Trigger automatically logs the change
             # else: Error message already shown in execute_query
 
+        # --- Tab 5: 票价与票种管理 ---
+    def create_fare_tab(self):
+        tab = ttk.Frame(self.notebook)
+        self.notebook.add(tab, text="票价管理")
+
+        # FareZone Tree
+        fz_frame = ttk.LabelFrame(tab, text="分区票价")
+        fz_frame.pack(side=tk.LEFT, fill="both", expand=True, padx=5, pady=5)
+        cols_fz = ('zone_id', 'zone_name', 'description')
+        self.fz_tree = ttk.Treeview(fz_frame, columns=cols_fz, show='headings', height=10)
+        for c, h in zip(cols_fz, ['ID', '分区', '描述']):
+            self.fz_tree.heading(c, text=h)
+            self.fz_tree.column(c, width=100)
+        self.fz_tree.pack(fill="both", expand=True)
+        
+        # TicketType Tree
+        tt_frame = ttk.LabelFrame(tab, text="票种规则")
+        tt_frame.pack(side=tk.LEFT, fill="both", expand=True, padx=5, pady=5)
+        cols_tt = ('type_id', 'type_name', 'base_price', 'validity_minutes')
+        self.tt_tree = ttk.Treeview(tt_frame, columns=cols_tt, show='headings', height=10)
+        for c, h, w in zip(cols_tt, ['ID','票种','基础价','有效期(分)'], [50,100,80,80]):
+            self.tt_tree.heading(c, text=h)
+            self.tt_tree.column(c, width=w)
+        self.tt_tree.pack(fill="both", expand=True)
+
+        # Load data
+        for zone in fetch_data("SELECT zone_id, zone_name, description FROM FareZone"):
+            self.fz_tree.insert('', tk.END, values=(zone['zone_id'], zone['zone_name'], zone['description']))
+        for tp in fetch_data("SELECT type_id, type_name, base_price, validity_minutes FROM TicketType"):
+            self.tt_tree.insert('', tk.END, values=(tp['type_id'], tp['type_name'], tp['base_price'], tp['validity_minutes']))
+
+    # --- Tab 6: 员工与排班 ---
+    def create_staff_tab(self):
+        tab = ttk.Frame(self.notebook)
+        self.notebook.add(tab, text="员工排班")
+
+        # Staff List
+        staff_frame = ttk.LabelFrame(tab, text="员工列表")
+        staff_frame.pack(side=tk.TOP, fill="x", padx=5, pady=5)
+        cols_s = ('staff_id','name','role','contact')
+        self.staff_tree = ttk.Treeview(staff_frame, columns=cols_s, show='headings', height=5)
+        for c,h in zip(cols_s, ['ID','姓名','岗位','联系方式']):
+            self.staff_tree.heading(c, text=h); self.staff_tree.column(c, width=100)
+        self.staff_tree.pack(fill="x")
+        for s in fetch_data("SELECT staff_id,name,role,contact FROM Staff"):
+            self.staff_tree.insert('',tk.END,values=(s['staff_id'],s['name'],s['role'],s['contact']))
+
+        # Assignment List
+        assign_frame = ttk.LabelFrame(tab, text="排班记录")
+        assign_frame.pack(side=tk.TOP, fill="both", expand=True, padx=5, pady=5)
+        cols_a = ('assign_id','staff_id','station_id','start_time','end_time')
+        self.assign_tree = ttk.Treeview(assign_frame, columns=cols_a, show='headings', height=8)
+        for c,h in zip(cols_a, ['排班ID','员工ID','站点ID','开始','结束']):
+            self.assign_tree.heading(c, text=h); self.assign_tree.column(c, width=100)
+        self.assign_tree.pack(fill="both", expand=True)
+        for a in fetch_data("SELECT assign_id,staff_id,station_id,start_time,end_time FROM StaffAssignment"):
+            self.assign_tree.insert('',tk.END,values=(a['assign_id'],a['staff_id'],a['station_id'],a['start_time'],a['end_time']))
+
+    # --- Tab 7: 维保记录 ---
+    def create_maint_tab(self):
+        tab = ttk.Frame(self.notebook)
+        self.notebook.add(tab, text="设备维保")
+
+        m_frame = ttk.LabelFrame(tab, text="维护记录")
+        m_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        cols_m = ('record_id','equipment','station_id','staff_id','start_time','end_time','description')
+        self.maint_tree = ttk.Treeview(m_frame, columns=cols_m, show='headings', height=12)
+        headers = ['ID','设备','站点','员工','开始','结束','备注']
+        for c,h in zip(cols_m, headers):
+            self.maint_tree.heading(c,text=h); self.maint_tree.column(c, width=100)
+        self.maint_tree.pack(fill="both", expand=True)
+        for r in fetch_data("SELECT record_id,equipment,station_id,staff_id,start_time,end_time,description FROM MaintenanceRecord"):
+            self.maint_tree.insert('',tk.END,values=tuple(r.values()))
+
+    # --- Tab 8: 服务公告 ---
+    def create_alert_tab(self):
+        tab = ttk.Frame(self.notebook)
+        self.notebook.add(tab, text="服务公告")
+
+        a_frame = ttk.LabelFrame(tab, text="公告列表")
+        a_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        cols_al = ('alert_id','line_id','station_id','start_time','end_time','message')
+        self.alert_tree = ttk.Treeview(a_frame, columns=cols_al, show='headings', height=12)
+        headers = ['ID','线路ID','站点ID','开始','结束','内容']
+        for c,h in zip(cols_al, headers):
+            self.alert_tree.heading(c,text=h); self.alert_tree.column(c, width=120)
+        self.alert_tree.pack(fill="both", expand=True)
+        for al in fetch_data("SELECT alert_id,line_id,station_id,start_time,end_time,message FROM ServiceAlert"):
+            self.alert_tree.insert('',tk.END,values=tuple(al.values()))
+
+    # --- Tab 9: 闸机进出 ---
+    def create_turnstile_tab(self):
+        tab = ttk.Frame(self.notebook)
+        self.notebook.add(tab, text="闸机日志")
+
+        t_frame = ttk.LabelFrame(tab, text="进出记录")
+        t_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        cols_t = ('log_id','passenger_id','station_id','action','timestamp','ticket_id')
+        self.turnstile_tree = ttk.Treeview(t_frame, columns=cols_t, show='headings', height=12)
+        headers = ['日志ID','乘客ID','站点ID','类型','时间','票务ID']
+        for c,h in zip(cols_t, headers):
+            self.turnstile_tree.heading(c,text=h); self.turnstile_tree.column(c, width=100)
+        self.turnstile_tree.pack(fill="both", expand=True)
+        for tl in fetch_data("SELECT log_id,passenger_id,station_id,action,timestamp,ticket_id FROM TurnstileLog"):
+            self.turnstile_tree.insert('',tk.END,values=tuple(tl.values()))
 
 # --- Run the Application ---
 if __name__ == "__main__":
