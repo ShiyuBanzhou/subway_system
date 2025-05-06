@@ -1,18 +1,3 @@
-/*
- Navicat Premium Dump SQL
-
- Source Server         : local
- Source Server Type    : MySQL
- Source Server Version : 80041 (8.0.41)
- Source Host           : localhost:3306
- Source Schema         : subway_system
-
- Target Server Type    : MySQL
- Target Server Version : 80041 (8.0.41)
- File Encoding         : 65001
-
- Date: 29/04/2025 16:08:22
-*/
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -58,6 +43,8 @@ INSERT INTO `line` VALUES (2, '2号线', 6, 10, '运营', '2012-10-01');
 INSERT INTO `line` VALUES (3, '亦庄线', 11, 13, '运营', '2010-12-30');
 INSERT INTO `line` VALUES (4, 'S1线', 16, 20, '停运', '2017-12-30');
 INSERT INTO `line` VALUES (5, '机场线', 21, 24, '运营', '2008-07-19');
+INSERT INTO `line` VALUES (6, '4号线', 26, 29, '运营', '2009-09-28');
+
 
 -- ----------------------------
 -- Table structure for maintenancerecord
@@ -354,6 +341,10 @@ INSERT INTO `station` VALUES (22, '三元桥', 5, '朝阳区三元桥路', 0);
 INSERT INTO `station` VALUES (23, '机场二号航站楼', 5, '顺义区空港街道', 0);
 INSERT INTO `station` VALUES (24, '机场三号航站楼', 5, '顺义区', 0);
 INSERT INTO `station` VALUES (25, '霍营', 5, '昌平区霍营镇', 1);
+INSERT INTO `station` VALUES (26, '平安里', 6, '新街口南大街交汇平安里西大街', 1);
+INSERT INTO `station` VALUES (27, '灵境胡同', 6, '西单附近', 0);
+INSERT INTO `station` VALUES (28, '西单', 6, '西城区西单北大街', 1);
+INSERT INTO `station` VALUES (29, '宣武门', 6, '宣武门外大街', 1);
 
 -- ----------------------------
 -- Table structure for ticket
