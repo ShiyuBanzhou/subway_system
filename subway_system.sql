@@ -20,6 +20,39 @@ INSERT INTO `farezone` VALUES (1, '1区', '市中心及周边核心区域');
 INSERT INTO `farezone` VALUES (2, '2区', '次核心区域');
 INSERT INTO `farezone` VALUES (3, '3区', '远郊及延伸区域');
 
+
+-- 管理员角色：拥有所有dbFinal库的权限
+CREATE ROLE IF NOT EXISTS admin_role;
+GRANT ALL PRIVILEGES ON dbFinal.* TO admin_role;
+
+-- 普通用户角色：只允许查表和查视图，不可改、不可删
+CREATE ROLE IF NOT EXISTS user_role;
+GRANT SELECT ON dbFinal.* TO user_role;
+GRANT EXECUTE ON dbFinal.* TO user_role; -- 允许调用存储过程和视图
+
+/*DROP USER IF EXISTS 'metro_admin'@'localhost';
+-- 管理员账户
+CREATE USER 'metro_admin'@'localhost' IDENTIFIED BY 'admin';
+
+-- 普通用户1
+CREATE USER 'metro_user1'@'localhost' IDENTIFIED BY 'user1';
+
+-- 普通用户2
+CREATE USER 'metro_user2'@'localhost' IDENTIFIED BY 'user2';
+-- 管理员账户分配管理员角色
+GRANT admin_role TO 'metro_admin'@'localhost';
+
+-- 普通账户分配普通角色
+GRANT user_role TO 'metro_user1'@'localhost';
+GRANT user_role TO 'metro_user2'@'localhost';
+GRANT ALL PRIVILEGES ON dbfinal.* TO 'metro_admin'@'localhost';
+
+-- 4. 让角色权限生效（可选步骤，建议加上）
+SET DEFAULT ROLE admin_role TO 'metro_admin'@'localhost';
+SET DEFAULT ROLE user_role TO 'metro_user1'@'localhost';
+SET DEFAULT ROLE user_role TO 'metro_user2'@'localhost';
+*/
+
 -- ----------------------------
 -- Table structure for line
 -- ----------------------------
@@ -488,6 +521,22 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `view_line_station_count`
 -- ----------------------------
 DROP VIEW IF EXISTS `view_station_schedule_today_xidan`;
 CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `view_station_schedule_today_xidan` AS select `t`.`train_number` AS `列车号`,`l`.`line_name` AS `所属线路`,`s`.`station_name` AS `当前站点`,`sch`.`arrival_time` AS `预计到达`,`sch`.`departure_time` AS `预计出发` from (((`schedule` `sch` join `train` `t` on((`sch`.`train_id` = `t`.`train_id`))) join `station` `s` on((`sch`.`station_id` = `s`.`station_id`))) join `line` `l` on((`s`.`line_id` = `l`.`line_id`))) where ((`sch`.`schedule_date` = curdate()) and (`s`.`station_name` = '西单')) order by `sch`.`arrival_time`,`sch`.`departure_time`;
+
+-- 换乘站统计视
+DROP VIEW IF EXISTS view_transfer_stations ;
+CREATE VIEW view_transfer_stations AS
+SELECT
+    s.station_name AS 换乘站,
+    COUNT(DISTINCT s.line_id) AS 所属线路数,
+    GROUP_CONCAT(DISTINCT l.line_name ORDER BY l.line_id) AS 所属线路名
+FROM
+    station s
+    JOIN line l ON s.line_id = l.line_id
+WHERE
+    s.is_transfer = 1
+GROUP BY
+    s.station_name;
+
 
 -- ----------------------------
 -- Procedure structure for sp_purchase_ticket

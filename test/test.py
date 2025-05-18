@@ -3,18 +3,58 @@ from tkinter import ttk, messagebox, simpledialog
 import mysql.connector
 from datetime import datetime
 
-# --- Database Connection Configuration ---
-# !!! 修改为你自己的数据库连接信息 !!!
+"""# --- Database Connection Configuration ---
 DB_CONFIG = {
     'host': 'localhost',       # 通常是 'localhost' 或 IP 地址
     'user': 'root',            # 使用 root 用户 (根据用户提供的信息)
     'password': '1234',      # 用户密码 (根据用户提供的信息)
     'database': 'dbFinal'
     # 'uth_plugin': 'mysql_native_password'
+} """
+
+DB_CONFIG = {
+    'host': 'localhost',
+    'database': 'dbFinal'
+    # 'user' 和 'password' 不要写死
 }
 
+def show_login_dialog():
+    login = tk.Tk()
+    login.title("地铁管理系统账户登录")
+    login.geometry("400x180")
+    tk.Label(login, text="账号:").grid(row=0, column=0, padx=10, pady=10)
+    user_var = tk.StringVar()
+    user_entry = tk.Entry(login, textvariable=user_var)
+    user_entry.grid(row=0, column=1, padx=10, pady=10)
+    tk.Label(login, text="密码:").grid(row=1, column=0, padx=10, pady=10)
+    pwd_var = tk.StringVar()
+    pwd_entry = tk.Entry(login, textvariable=pwd_var, show="*")
+    pwd_entry.grid(row=1, column=1, padx=10, pady=10)
+
+    def try_login():
+        username = user_var.get()
+        password = pwd_var.get()
+        if not username or not password:
+            messagebox.showerror("错误", "请填写账号和密码")
+            return
+        # 这里设置全局DB_CONFIG
+        global DB_CONFIG
+        DB_CONFIG['user'] = username
+        DB_CONFIG['password'] = password
+        # 尝试连接
+        try:
+            conn = mysql.connector.connect(**DB_CONFIG, auth_plugin='mysql_native_password')
+            conn.close()
+            messagebox.showinfo("登陆成功", f"欢迎 {username} ！")
+            login.destroy()
+        except mysql.connector.Error as err:
+            messagebox.showerror("登录失败", f"数据库错误: {err}")
+
+    tk.Button(login, text="登录", command=try_login).grid(row=2, column=0, columnspan=2, pady=20)
+    login.mainloop()
+
+
 # --- Database Interaction Functions ---
-# (get_db_connection, fetch_data, execute_query, call_stored_procedure 函数保持不变)
 def get_db_connection():
     """Establish database connection"""
     try:
@@ -1094,6 +1134,7 @@ class SubwayApp(SubwayMapMixin, tk.Tk):
 # --- Run the Application ---
 if __name__ == "__main__":
     # Check if database connection is available at startup
+    show_login_dialog()
     conn_test = get_db_connection()
     if conn_test:
         try:
