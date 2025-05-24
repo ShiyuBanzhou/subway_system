@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地铁信息管理系统 - 功能与数据演示</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB";
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f6f8fa;
+            color: #24292e;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+        }
+        header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        header p {
+            font-size: 1.1em;
+            color: #586069;
+        }
+        nav {
+            text-align: center;
+            margin: 20px 0;
+        }
+        nav a {
+            margin: 0 15px;
+            color: #0366d6;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        section {
+            margin-bottom: 30px;
+        }
+        h2 {
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        h3 {
+            font-size: 1.4em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #24292e;
+        }
+        ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .feature-list li {
+            background-color: #f9f9f9;
+            padding: 8px;
+            border-left: 3px solid #0366d6;
+        }
+        .admin-feature li {
+            border-left: 3px solid #d73a49;
+        }
+        .tech-stack span, .db-table span {
+            display: inline-block;
+            background-color: #f1f8ff;
+            color: #0366d6;
+            padding: 3px 8px;
+            margin: 3px;
+            border-radius: 3px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.9em;
+        }
+        .db-table span {
+             background-color: #e6ffed;
+             color: #22863a;
+        }
+        pre {
+            background-color: #f6f8fa;
+            padding: 15px;
+            border-radius: 3px;
+            overflow-x: auto;
+            border: 1px solid #e1e4e8;
+        }
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e4e8;
+            font-size: 0.9em;
+            color: #586069;
+        }
+        .button { /* 移除了头部的 GitHub 按钮样式，如果需要页内跳转按钮可复用 */
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚇 地铁信息管理系统</h1>
+            <p>一个用于演示地铁运营、调度、票务及相关数据管理功能的系统。</p>
+        </header>
+
+        <nav>
+            <a href="#overview">系统概览</a>
+            <a href="#features">功能演示</a>
+            <a href="#database">数据库核心</a>
+            <a href="#screenshots">系统截图</a>
+            <a href="#tech">技术栈</a>
+            </nav>
+
+        <section id="overview">
+            <h2>系统概览 📝</h2>
+            <p>本项目旨在通过一个具体的地铁管理系统实例，演示如何利用 MySQL 数据库和 Python Tkinter 图形用户界面进行数据管理与交互。系统区分乘客和管理员两种角色，分别提供不同的操作界面和功能，以模拟真实的地铁运营管理场景。</p>
+            <p>系统的核心在于其关系型数据库，该数据库详细存储了关于线路、站点、列车、时刻表、乘客、票务、员工以及维保、服务公告等运营数据。本页面将重点展示这些数据如何被有效组织和运用。</p>
+        </section>
+
+        <section id="features">
+            <h2>核心功能演示 ✨</h2>
+            <p>以下功能均基于数据库中的实际数据进行动态展示和操作：</p>
+
+            <h3>👤 乘客视角 (passenger_user):</h3>
+            <ul class="feature-list">
+                <li><strong>线路与站点查询:</strong> 用户可查看各条地铁线路及其包含的站点列表，获取站点的具体位置描述和是否为换乘站等信息。</li>
+                <li><strong>交互式地铁地图:</strong> 提供一个可视化的线路图，图上站点可点击以查询该站点的详细信息（如位置、换乘状态）及周边的兴趣点（POIs）。</li>
+                <li><strong>周边兴趣点 (POIs):</strong> 展示选定站点附近的商业、餐饮、景点等多种类别的兴趣点信息，数据来源于 <code>PointsOfInterest</code> 表。</li>
+                <li><strong>时刻表查询:</strong> 可按站点和日期查询列车的预计到达和出发时间，数据来源于 <code>Schedule</code> 表，并关联 <code>Train</code>, <code>Station</code>, <code>Line</code> 表获取完整信息。</li>
+                <li><strong>票务中心:</strong>
+                    <ul>
+                        <li><strong>智能票价计算:</strong> 根据乘客选择的出发站点、到达站点及票种，系统通过调用存储过程 <code>sp_calculate_fare</code> 来计算票价。该过程依据 <code>FareZone</code>（票价分区）、<code>Station</code>（站点所属分区）及 <code>FareRule</code>（票价规则）表中的数据进行计算。</li>
+                        <li><strong>便捷购票流程:</strong> 乘客选定行程和票种后，可通过存储过程 <code>sp_purchase_ticket</code> 完成购票，相关信息记录于 <code>Ticket</code> 表，并与 <code>Passenger</code>, <code>Station</code>, <code>TicketType</code> 表关联。购票成功后，会自动在 <code>TurnstileLog</code> 表中生成一条模拟的进站记录。</li>
+                        <li><strong>购票历史追溯:</strong> 可查看当前用户的历史购票记录，包括票号、起讫站点、票价、票种和购买时间，数据从 <code>Ticket</code> 表提取并关联显示乘客名和站点名。</li>
+                    </ul>
+                </li>
+                <li><strong>闸机通行日志:</strong> 用户可以查看（或按乘客ID、站点筛选）闸机进出记录，这些数据来自 <code>TurnstileLog</code> 表，反映了乘客的实际通行情况。</li>
+                <li><strong>服务公告查看:</strong> 实时展示地铁运营方发布的最新服务公告或临时调整通知，数据来源于 <code>ServiceAlert</code> 表。</li>
+            </ul>
+
+            <h3>🛠️ 管理员视角 (<code>admin_user</code>):</h3>
+            <ul class="feature-list admin-feature">
+                <li><strong>列车信息管理:</strong>
+                    <ul>
+                        <li><strong>数据维护:</strong> 管理员可对 <code>Train</code> 表中的列车数据进行增、删、改、查操作，包括列车编号、所属线路 (关联 <code>Line</code> 表)、型号、容量及当前状态（如“运行中”、“维修中”）。</li>
+                        <li><strong>状态变更日志:</strong> 当列车状态发生改变时，触发器 <code>trg_after_train_status_update</code> 会自动在 <code>TrainStatusLog</code> 表中记录变更历史。</li>
+                    </ul>
+                </li>
+                <li><strong>员工与排班管理:</strong>
+                    <ul>
+                        <li><strong>员工档案管理:</strong> 维护 <code>Staff</code> 表中的员工信息，包括姓名、岗位、联系方式、入职日期和在职状态。</li>
+                        <li><strong>排班计划制定:</strong> 管理 <code>StaffAssignment</code> 表中的排班数据，为员工 (<code>Staff</code>) 指派在特定站点 (<code>Station</code>) 的工作班次（早/中/晚班等）及具体起止时间。</li>
+                    </ul>
+                </li>
+                <li><strong>站点设备与维保管理:</strong>
+                    <ul>
+                        <li><strong>设备台账:</strong> 查看各站点 (<code>Station</code>) 的设备 (<code>Equipment</code>) 信息，包括设备名称、类型、型号、安装位置及状态。</li>
+                        <li><strong>维保记录跟踪:</strong> 记录和查询 <code>MaintenanceRecord</code> 表中的设备维护历史，包含维修的设备、站点、参与员工 (<code>Staff</code>)、起止时间及处理描述。</li>
+                        <li><strong>状态自动更新:</strong> 当设备 (<code>Equipment</code>) 状态更新为“故障”时，触发器 <code>trg_after_equipment_fault</code> 能自动在 <code>ServiceAlert</code> 表创建服务警示。维保记录 (<code>MaintenanceRecord</code>) 中的结束时间被填写后，触发器 <code>trg_after_maintenance_completion</code> 会将对应设备的 `status` 更新为“正常”，并记录最后维护日期。</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="database">
+            <h2>数据库核心展示 📊</h2>
+            <p>系统的数据基石是 MySQL 数据库 (<code>dbfinal</code>)，其通过一系列精心设计的表、视图、存储过程和触发器来支撑上述功能的实现：</p>
+            <h3>关键数据表：</h3>
+            <div class="db-table">
+                <span>Line (线路)</span> <span>Station (站点)</span> <span>RouteSegment (路段)</span>
+                <span>Train (列车)</span> <span>Schedule (时刻表)</span>
+                <span>Passenger (乘客)</span> <span>Ticket (车票)</span> <span>TicketType (票种)</span>
+                <span>FareZone (票价区)</span> <span>FareRule (票价规则)</span>
+                <span>Staff (员工)</span> <span>StaffAssignment (员工排班)</span>
+                <span>Equipment (设备)</span> <span>MaintenanceRecord (维保记录)</span>
+                <span>PointsOfInterest (兴趣点)</span> <span>ServiceAlert (服务公告)</span>
+                <span>TurnstileLog (闸机日志)</span> <span>TrainStatusLog (列车状态日志)</span>
+            </div>
+            <ul>
+                <li><strong>网络与运营:</strong> <code>Line</code>, <code>Station</code>, <code>RouteSegment</code> 构建了地铁网络基础。<code>Train</code> 和 <code>Schedule</code> 表存储了列车运行的实际数据。</li>
+                <li><strong>票务体系:</strong> <code>Passenger</code>, <code>Ticket</code>, <code>TicketType</code>, <code>FareZone</code>, 和 <code>FareRule</code> 共同构成了票务和计费的核心逻辑。</li>
+                <li><strong>内部管理:</strong> <code>Staff</code> 和 <code>StaffAssignment</code> 用于人力资源调度。<code>Equipment</code> 和 <code>MaintenanceRecord</code> 负责资产和维护管理。</li>
+                <li><strong>乘客交互与日志:</strong> <code>PointsOfInterest</code> 丰富站点信息。<code>TurnstileLog</code>, <code>ServiceAlert</code>, <code>TrainStatusLog</code> 记录运营动态和乘客行为。</li>
+            </ul>
+            <h3>数据库程序化对象：</h3>
+            <ul>
+                <li><strong>存储过程 (Stored Procedures):</strong>
+                    <ul>
+                        <li><code>sp_calculate_fare(出发站点ID, 到达站点ID, 票种ID, OUT 计算后票价, OUT 提示信息)</code>: 封装了复杂的票价计算逻辑。</li>
+                        <li><code>sp_purchase_ticket(乘客ID, 出发站点ID, 到达站点ID, 票种ID, OUT 车票ID, OUT 提示信息)</code>: 处理购票事务，确保数据一致性。</li>
+                    </ul>
+                </li>
+                <li><strong>触发器 (Triggers):</strong>
+                    <ul>
+                        <li><code>trg_after_train_status_update</code>: 列车状态更新后自动记入 <code>TrainStatusLog</code>。</li>
+                        <li><code>trg_after_equipment_fault</code>: 设备报修时自动创建服务公告至 <code>ServiceAlert</code>。</li>
+                        <li><code>trg_after_maintenance_completion</code>: 维保完成后自动更新 <code>Equipment</code> 状态及上次维保日期。</li>
+                    </ul>
+                </li>
+                <li><strong>视图 (Views):</strong>
+                    <ul>
+                        <li><code>view_line_station_count</code>: 统计每条线路的站点数量。</li>
+                        <li><code>view_station_schedule_today_xidan</code>: (示例)快速查看特定站点当日时刻表。</li>
+                        <li><code>view_transfer_stations</code>: 列出所有换乘站及其可换乘的线路。</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+            <h2>技术栈 💻</h2>
+            <p>本项目主要采用以下技术构建：</p>
+            <div class="tech-stack">
+                <span>MySQL (数据库)</span> <span>SQL (结构化查询语言)</span> <span>Python (编程语言)</span> <span>Tkinter (图形用户界面库)</span> <span>mysql.connector (Python的MySQL驱动)</span>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; <script>document.write(new Date().getFullYear())</script> DayShift。地铁信息管理系统演示页面。
+            <br>若需查看项目源码，可访问 <a href="https://github.com/ShiyuBanzhou/subway_system" target="_blank">GitHub仓库</a>。
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
